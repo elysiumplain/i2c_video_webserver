@@ -1,0 +1,31 @@
+<html>
+
+<head>
+  <title>Pi Thermal Video</title>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script type="text/javascript" src="{{url_for('static', filename='script.js')}}"></script>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='ui.css')}}">
+</head>
+
+<body>
+  <div class='container'>
+    <h1>Pi Thermal Video</h1>
+    <img src="{{ url_for('video_feed') }}" class='video'>
+  </div>
+  <div class='container'>
+    <form class="form-inline">
+      <a href=# id=save><button class='btn btn-default'>Save</button></a>
+      <a href=# id=units><button class='btn btn-default'>Change Temp Units</button></a>
+      <a href=# id=colormapback><button class='btn btn-default'>Previous Colormap</button></a>
+      <a href=# id=colormap><button class='btn btn-default'>Next Colormap</button></a>
+      <a href=# id=interpolationback><button class='btn btn-default'>Previous Interpolation</button></a>
+      <a href=# id=interpolation><button class='btn btn-default'>Next Interpolation</button></a>
+      <a href=# id=filter><button class='btn btn-default'>Toggle Filter</button></a>
+    </form>
+  </div>
+  <hr></hr>
+  <div class='container2'><a href=# id=exit><button class='btn btn-default'>Exit</button></a></div>
+
+</body>
+
+</html>
