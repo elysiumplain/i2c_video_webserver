@@ -8,23 +8,39 @@
 </head>
 
 <body>
+
   <div class='container'>
-    <h1>Pi Thermal Video</h1>
-    <img src="{{ url_for('video_feed') }}" class='video'>
+    <h1 class='text-center'>Pi Thermal Video</h1>
+    <img id="videoFeed" src="{{ url_for('video_feed') }}" class='video'>
   </div>
+
   <div class='container'>
     <form class="form-inline">
-      <a href=# id=save><button class='btn btn-default'>Save</button></a>
-      <a href=# id=units><button class='btn btn-default'>Change Temp Units</button></a>
-      <a href=# id=colormapback><button class='btn btn-default'>Previous Colormap</button></a>
-      <a href=# id=colormap><button class='btn btn-default'>Next Colormap</button></a>
-      <a href=# id=interpolationback><button class='btn btn-default'>Previous Interpolation</button></a>
-      <a href=# id=interpolation><button class='btn btn-default'>Next Interpolation</button></a>
-      <a href=# id=filter><button class='btn btn-default'>Toggle Filter</button></a>
+      <div style="display: flex;">
+        <a href=# id=units><button class='btn'>Change Temp Units</button></a>
+        <a href=# id=filter><button class='btn'>Toggle Filter</button></a>
+      </div>
+      <div style="display: flex;">
+        <a href=# id=colormapback><button class='btn'>Previous Colormap</button></a>
+        <a href=# id=colormap><button class='btn'>Next Colormap</button></a>
+      </div>
+      <div style="display: flex;">
+        <a href=# id=interpolationback><button class='btn'>Previous Interpolation</button></a>
+        <a href=# id=interpolation><button class='btn'>Next Interpolation</button></a>
+      </div>
     </form>
   </div>
-  <hr></hr>
-  <div class='container2'><a href=# id=exit><button class='btn btn-default'>Exit</button></a></div>
+
+  <hr>
+
+  <div class='container2'>
+    <form class="form-inline">
+      <div style="display: flex;">
+        <a href=# id=save><button class='btn'>Screenshot</button></a>
+        <a href=# id=exit><button class='btn'>Exit</button></a>
+      </div>
+    </form>
+  </div>
 
 </body>
 
