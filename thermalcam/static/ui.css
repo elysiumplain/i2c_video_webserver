@@ -1,4 +1,4 @@
-h1 {
+.text-center {
 	text-align: center;
 }
 
@@ -18,11 +18,18 @@ h1 {
 }
 
 .form-inline {
-	margin: 5px;
-	margin-left: -10px;
-	margin-right: -10px;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin: 5px 0;
 }
 
 .btn {
-	margin-left: 3px;
+	margin: 0 2px;
+	cursor: pointer;
+}
+
+.video {
+	max-width: 100%;
 }
