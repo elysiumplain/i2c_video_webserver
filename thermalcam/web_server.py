@@ -4,7 +4,10 @@
 # Flask web server for MLX90640 Thermal Camera w Raspberry Pi
 # If running directly, run from root folder, not pithermalcam folder
 ##################################
-from thermalcam.pi_thermal_cam import PiThermalCam
+try:
+	from thermalcam.pi_thermal_cam import PiThermalCam
+except:
+	from pi_thermal_cam import PiThermalCam
 from flask import Response, request
 from flask import Flask
 from flask import render_template
@@ -156,4 +159,5 @@ def start_server(thermal_cam_instance, publish=False, port=8000, output_folder:s
 
 # If this is the main thread, simply start the server
 if __name__ == '__main__':
-	start_server(thermal_sensor=PiThermalCam())
+	from thermal_sensor import MLX90640Sensor
+	start_server(PiThermalCam(thermal_sensor=MLX90640Sensor()))

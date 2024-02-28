@@ -18,6 +18,7 @@ import numpy as np
 from numpy import ndarray
 from scipy import ndimage
 import hashlib
+from enum import Enum
 
 
 try:
@@ -66,7 +67,36 @@ I   - Change the Interpolation Algorithm Used\r\n \
 Double-click with Mouse - Save a Snapshot of the Current Frame")
 
 
+class Interpolation(Enum):
+    INTER_NEAREST = (cv2.INTER_NEAREST, "Nearest")
+    INTER_LINEAR = (cv2.INTER_LINEAR, "Inter Linear")
+    INTER_AREA = (cv2.INTER_AREA, "Inter Area")
+    INTER_CUBIC = (cv2.INTER_CUBIC, "Inter Cubic")
+    INTER_LANCZOS4 = (cv2.INTER_LANCZOS4, "Inter Lanczos4")
+    PURE_SCIPY = (5, "Pure Scipy")
+    SCIPY_CV2_MIXED = (6, "Scipy/CV2 Mixed")
+    
+    def __new__(cls, value, name):
+        obj = object.__new__(cls)
+        obj._value_ = value
+        obj._name_ = name
+        obj.fname = name
+        return obj
+    
+    def next(current):
+        """Cycle interpolation forward"""
+        dex = list(Interpolation)
+        return dex[(current.value + 1) % len(dex)]
+    
+    def prev(current):
+        """Cycle interpolation backwards"""
+        dex = list(Interpolation)
+        return dex[(current.value - 1) % len(dex)]
+
+
 class PiThermalCam:
+
+
     # See https://gitlab.com/cvejarano-oss/cmapy/-/blob/master/docs/colorize_all_examples.md to for options that can be put in this list
     _colormap_list: List[str] = [
         "jet",
@@ -78,24 +108,6 @@ class PiThermalCam:
         "tab20",
         "gnuplot2",
         "brg",
-    ]
-    _interpolation_list: List[int] = [
-        cv2.INTER_NEAREST,
-        cv2.INTER_LINEAR,
-        cv2.INTER_AREA,
-        cv2.INTER_CUBIC,
-        cv2.INTER_LANCZOS4,
-        5,
-        6,
-    ]
-    _interpolation_list_name: List[str] = [
-        "Nearest",
-        "Inter Linear",
-        "Inter Area",
-        "Inter Cubic",
-        "Inter Lanczos4",
-        "Pure Scipy",
-        "Scipy/CV2 Mixed",
     ]
     _current_frame_processed: bool = (
         False  # Tracks if the current processed image matches the current raw image
@@ -127,7 +139,7 @@ class PiThermalCam:
         self.output_folder: str = output_folder
 
         self._colormap_index: int = 0
-        self._interpolation_index: int = 3
+        self._interpolation: Interpolation = Interpolation.INTER_CUBIC
         self._setup_therm_cam()
         self._t0: float = time.time()
         self.update_image_frame()
@@ -160,8 +172,7 @@ class PiThermalCam:
         self._raw_image = self.thermal_sensor.get_raw_data()
         self._set_minmax_image_temp(self._raw_image)
         self._raw_image = self._scale_image_temps(self._raw_image, self._temp_min, self._temp_max)
-#        print(hashlib.sha256(str(self._raw_image).encode('utf-8')).hexdigest())
-#        print(type(self._raw_image))
+        logger.debug(f"img hash = {hashlib.sha256(str(self._raw_image).encode('utf-8')).hexdigest()}")
 
     def _set_minmax_image_temp(self, img):
         self._temp_min = np.min(img)
@@ -195,14 +206,14 @@ class PiThermalCam:
         # Image processing
         # Can't apply colormap before ndimage, so reversed in first two options, even though it seems slower
         if (
-            self._interpolation_index == 5
+            self._interpolation == Interpolation.PURE_SCIPY
         ):  # Scale via scipy only - slowest but seems higher quality
             self._image = ndimage.zoom(self._raw_image, 25)  # interpolate with scipy
             self._image = cv2.applyColorMap(
                 self._image, cmapy.cmap(self._colormap_list[self._colormap_index])
             )
         elif (
-            self._interpolation_index == 6
+            self._interpolation == Interpolation.SCIPY_CV2_MIXED
         ):  # Scale partially via scipy and partially via cv2 - mix of speed and quality
             self._image = ndimage.zoom(self._raw_image, 10)  # interpolate with scipy
             self._image = cv2.applyColorMap(
@@ -218,7 +229,7 @@ class PiThermalCam:
             self._image = cv2.resize(
                 self._image,
                 (800, 600),
-                interpolation=self._interpolation_list[self._interpolation_index],
+                interpolation = self._interpolation.value,
             )
         self._image = cv2.flip(self._image, 1)
         if self.filter_image:
@@ -229,9 +240,9 @@ class PiThermalCam:
         if self.use_f:
             temp_min = _c_to_f(self._temp_min)
             temp_max = _c_to_f(self._temp_max)
-            text = f"Tmin={temp_min:+.1f}F - Tmax={temp_max:+.1f}F - FPS={1 / (time.time() - self._t0):.1f} - Interpolation: {self._interpolation_list_name[self._interpolation_index]} - Colormap: {self._colormap_list[self._colormap_index]} - Filtered: {self.filter_image}"
+            text = f"Tmin={temp_min:+.1f}F - Tmax={temp_max:+.1f}F - FPS={1 / (time.time() - self._t0):.1f} - Interpolation: {self._interpolation.fname} - Colormap: {self._colormap_list[self._colormap_index]} - Filtered: {self.filter_image}"
         else:
-            text = f"Tmin={self._temp_min:+.1f}C - Tmax={self._temp_max:+.1f}C - FPS={1 / (time.time() - self._t0):.1f} - Interpolation: {self._interpolation_list_name[self._interpolation_index]} - Colormap: {self._colormap_list[self._colormap_index]} - Filtered: {self.filter_image}"
+            text = f"Tmin={self._temp_min:+.1f}C - Tmax={self._temp_max:+.1f}C - FPS={1 / (time.time() - self._t0):.1f} - Interpolation: {self._interpolation.fname} - Colormap: {self._colormap_list[self._colormap_index]} - Filtered: {self.filter_image}"
         self._set_image_text_background()
         cv2.putText(
             self._image,
@@ -305,9 +316,9 @@ class PiThermalCam:
         elif key == ord("t"):  # If t is chosen cycle the units used for Temperature
             self.use_f = not self.use_f
         elif key == ord("u"):  # If t is chosen cycle the units used for temperature
-            self.change_interpolation()
+            self._interpolation = Interpolation.next(self._interpolation)
         elif key == ord("i"):  # If i is chosen cycle interpolation algorithm
-            self.change_interpolation(forward=False)
+            self._interpolation = Interpolation.prev(self._interpolation)
         elif key == 27:  # Exit nicely if escape key is used
             cv2.destroyAllWindows()
             self._displaying_onscreen = False
@@ -339,17 +350,6 @@ class PiThermalCam:
             self._colormap_index -= 1
             if self._colormap_index < 0:
                 self._colormap_index = len(self._colormap_list) - 1
-
-    def change_interpolation(self, forward: bool = True):
-        """Cycle interpolation. Forward by default, backwards if param set to false."""
-        if forward:
-            self._interpolation_index += 1
-            if self._interpolation_index == len(self._interpolation_list):
-                self._interpolation_index = 0
-        else:
-            self._interpolation_index -= 1
-            if self._interpolation_index < 0:
-                self._interpolation_index = len(self._interpolation_list) - 1
 
     def update_image_frame(self):
         """Pull raw temperature data, process it to an image, and update image text"""

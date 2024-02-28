@@ -5,6 +5,7 @@ from adafruit_mlx90640 import MLX90640, RefreshRate
 import busio
 import board
 import time
+import warnings
 
 
 class ThermalSensor(ABC):
@@ -25,8 +26,9 @@ class MLX90640Sensor(ThermalSensor):
 
     def initialize(self):
         """Initialize the MLX90640 thermal sensor."""
-        print(f"initializing {self.__class__} sensor")
+        #print(f"initializing {self.__class__} sensor")
         try:
+            warnings.filterwarnings("ignore")
             self.i2c = busio.I2C(board.SCL, board.SDA, frequency=800000)
             self.mlx = MLX90640(self.i2c)
             self.mlx.refresh_rate = RefreshRate.REFRESH_8_HZ

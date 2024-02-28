@@ -1,0 +1,18 @@
+[scrots]
+output_folder = "/home/pi/Desktop/mlxFLIRCam/saved_snapshots/"
+
+[sensor]
+module_name = "thermalcam.thermal_sensor"
+class_name = "MLX90640Sensor"
+
+[operations]
+display_local = false
+web_server = true
+
+[webserver]
+port = 8000
+publish = false
+log = "thermal_server.log"
+
+[camera]
+log = "thermal_cam.log"
