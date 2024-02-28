@@ -3,7 +3,17 @@ import inspect
 from thermalcam.pi_thermal_cam import PiThermalCam
 from thermalcam.thermal_sensor import ThermalSensor
 from typing import List, Tuple, Type
+import toml
 
+
+def read_config():
+    try:
+        with open("config.toml", "r") as config_file:
+            config = toml.load(config_file)
+        return config
+    except FileNotFoundError:
+        print("Config file not found. Exiting.")
+        exit()
 
 def get_subclasses_of_base(module_name, base_class) -> List[Tuple[str, Type]]:
     module = importlib.import_module(module_name)
@@ -12,37 +22,32 @@ def get_subclasses_of_base(module_name, base_class) -> List[Tuple[str, Type]]:
     return sensor_classes
 
 if __name__ == "__main__":
-    OUTPUT_FOLDER = "/home/pi/Desktop/mlxFLIRCam/saved_snapshots/"
-    
-    sensor_classes = get_subclasses_of_base("thermalcam.thermal_sensor", ThermalSensor)
-    print(f"Which Sensor are you using?")
-    [print(f"\t{i + 1}. {sensor}") for (i, sensor) in enumerate(sensor_classes)]
-    sensor_choice = int(input("number: "))
+    config = read_config()
 
-    if 1 <= sensor_choice <= len(sensor_classes):
-        sensor_class = sensor_classes[sensor_choice - 1][1]()
-    else:
-        print("Invalid sensor choice. Exiting.")
-        exit()
+    OUTPUT_FOLDER = config["scrots"]["output_folder"]
+    CAMERA_LOG = config["camera"]["log"]
+    WEBSERVER_LOG = config["webserver"]["log"]
+
+    print(f"Compatible Sensors:")
+    [print(f"\t{i}. {sensor}") for (i, sensor) in enumerate(get_subclasses_of_base("thermalcam.thermal_sensor", ThermalSensor), start=1)]
+
+    sensor_choice = config["sensor"]
+    module_name = sensor_choice["module_name"]
+    class_name = sensor_choice["class_name"]
+    print(f'Selected Sensor:\r\n\t{module_name=}\r\n\t{class_name=}')
+
+    sensor_class = getattr(importlib.import_module(module_name), class_name)()
 
     #instantiate a thermalcam instance and stage the sensor using the selected ThermalSensor subclass
     thermalcam = PiThermalCam(thermal_sensor=sensor_class, output_folder=OUTPUT_FOLDER)
 
-    usage=["display_camera_onscreen","start_webserver","display_camera_onscreen and start_webserver"]
-    print(f"What would you like to do?")
-    [print(f"\t{i + 1}. {use}") for (i, use) in enumerate(usage)]
-    operation_choice = int(input("number: "))
+    operations = config["operations"]
+    print(f"Selected Operations:")
+    [print(f'\t{op}: {v}') for (op, v) in operations.items()]
 
-    if operation_choice == 1:
+    if operations["display_local"]:
         thermalcam.display_camera_onscreen()
-    elif operation_choice == 2:
+    if operations["web_server"]:
         import thermalcam.web_server as server
-        publish = input("Allow public access? (y/n): ") == "y"
-        server.start_server(thermalcam, publish=publish)
-    elif operation_choice == 3:
-        import thermalcam.web_server
-        thermalcam.display_camera_onscreen()
-        server.start_server(thermalcam)
-    else:
-        print("Invalid operation choice. Exiting.")
-        exit()
+        webserver_configs = config["webserver"]
+        server.start_server(thermalcam, **webserver_configs)
