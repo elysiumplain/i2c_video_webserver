@@ -19,7 +19,7 @@ from numpy import ndarray
 from scipy import ndimage
 import hashlib
 from enum import Enum
-
+from utils import common_utils
 
 try:
     from thermalcam.thermal_sensor import ThermalSensor, MLX90640Sensor
@@ -36,21 +36,6 @@ logging.basicConfig(
     datefmt="%d-%b-%y %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-
-
-def _temps_to_rescaled_uints(
-    img_arr: Union[List[float], np.ndarray], temp_min: float, temp_max: float
-) -> np.uint8:
-    """Function to convert temperatures to pixels on image"""
-    img_arr = np.nan_to_num(img_arr)
-    norm = np.uint8((img_arr - temp_min) * 255 / (temp_max - temp_min))
-    norm.shape = (24, 32)
-    return norm
-
-
-def _c_to_f(temp: float) -> float:
-    """Convert temperature from C to F"""
-    return (9.0 / 5.0) * temp + 32.0
 
 
 def _print_shortcuts_keys():
@@ -164,7 +149,7 @@ class PiThermalCam:
                 continue  # if error, just read again
 
         temp_c = np.mean(frame)
-        temp_f = _c_to_f(temp_c)
+        temp_f = common_utils.c_to_f(temp_c)
         return temp_c, temp_f
 
     def _pull_raw_image(self):
@@ -181,7 +166,7 @@ class PiThermalCam:
     def _scale_image_temps(self, img, min, max):
         """Scale image temp units based on the thermal range within view, then flag frame as unprocessed."""
         try:
-            img = _temps_to_rescaled_uints(
+            img = common_utils.temps_to_rescaled_uints(
                 img, min, max
             )
             self._current_frame_processed = (
@@ -238,8 +223,8 @@ class PiThermalCam:
     def _add_image_text(self):
         """Set image text content"""
         if self.use_f:
-            temp_min = _c_to_f(self._temp_min)
-            temp_max = _c_to_f(self._temp_max)
+            temp_min = common_utils.c_to_f(self._temp_min)
+            temp_max = common_utils.c_to_f(self._temp_max)
             text = f"Tmin={temp_min:+.1f}F - Tmax={temp_max:+.1f}F - FPS={1 / (time.time() - self._t0):.1f} - Interpolation: {self._interpolation.fname} - Colormap: {self._colormap_list[self._colormap_index]} - Filtered: {self.filter_image}"
         else:
             text = f"Tmin={self._temp_min:+.1f}C - Tmax={self._temp_max:+.1f}C - FPS={1 / (time.time() - self._t0):.1f} - Interpolation: {self._interpolation.fname} - Colormap: {self._colormap_list[self._colormap_index]} - Filtered: {self.filter_image}"
