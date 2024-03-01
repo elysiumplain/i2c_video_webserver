@@ -19,9 +19,9 @@ $(function() {
 		return false;
 	});
 
-	$('a#colormap').on('click', function(e) {
+	$('a#colormap-next').on('click', function(e) {
 		e.preventDefault()
-		$.getJSON('/colormap',
+		$.getJSON('/colormap/next',
 			function(data) {
 				//do nothing
 			}
@@ -29,9 +29,9 @@ $(function() {
 		return false;
 	});
 
-	$('a#colormapback').on('click', function(e) {
+	$('a#colormap-prev').on('click', function(e) {
 		e.preventDefault()
-		$.getJSON('/colormapback',
+		$.getJSON('/colormap/next',
 			function(data) {
 				//do nothing
 			}
@@ -49,9 +49,9 @@ $(function() {
 		return false;
 	});
 
-	$('a#interpolation').on('click', function(e) {
+	$('a#interpolation-next').on('click', function(e) {
 		e.preventDefault()
-		$.getJSON('/interpolation',
+		$.getJSON('/interpolation/next',
 			function(data) {
 				//do nothing
 			}
@@ -59,9 +59,9 @@ $(function() {
 		return false;
 	});
 
-	$('a#interpolationback').on('click', function(e) {
+	$('a#interpolation-prev').on('click', function(e) {
 		e.preventDefault()
-		$.getJSON('/interpolationback',
+		$.getJSON('/interpolation/prev',
 			function(data) {
 				//do nothing
 			}

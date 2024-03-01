@@ -78,6 +78,10 @@ class Interpolation(Enum):
         dex = list(Interpolation)
         return dex[(current.value - 1) % len(dex)]
 
+    @classmethod
+    def to_dict(cls):
+        return {entry.name: entry.value[0] for entry in cls}
+
 
 class PiThermalCam:
 
@@ -314,6 +318,14 @@ class PiThermalCam:
         """Used to save an image on double-click"""
         if event == cv2.EVENT_LBUTTONDBLCLK:
             self.save_image()
+
+    def change_interpolation(self, previous=False):
+        """Iterate through the interpolation options provided by the Interpolation Enum. A parameter of previous will call iterate backward through the list."""
+        if previous:
+            self._interpolation = Interpolation.prev(self._interpolation)
+        else:
+            self._interpolation = Interpolation.next(self._interpolation)
+
 
     def display_next_frame_onscreen(self):
         """Display the camera live to the display"""
